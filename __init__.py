@@ -172,14 +172,14 @@ class SaveImageAZ:
                     "STRING",
                     {
                         "default": "ComfyUI",
-                        "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes.",
+                        "tooltip": "The prefix for the file to save. Includes the folder name to save to specify the subfolder.",
                     },
                 ),
                 "output_folder": (
                     "STRING",
                     {
                         "default": "output",
-                        "tooltip": "The folder to save the images to.",
+                        "tooltip": "The folder to save the images to. If it is not abspath, use default ComfyUI output folder.",
                     },
                 ),
             },
@@ -191,18 +191,11 @@ class SaveImageAZ:
 
     OUTPUT_NODE = True
 
-    CATEGORY = "KJNodes/image"
+    CATEGORY = "AZNodes/image"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
     def save_images(self, images, output_folder, filename_prefix="ComfyUI"):
         filename_prefix += self.prefix_append
-
-        # 检查并重新创建输出文件夹
-        if os.path.exists(output_folder):
-            import shutil
-
-            shutil.rmtree(output_folder)
-        os.makedirs(output_folder, exist_ok=True)
 
         if os.path.isabs(output_folder):
             full_output_folder = output_folder
@@ -224,6 +217,13 @@ class SaveImageAZ:
                     images[0].shape[0],
                 )
             )
+            print(full_output_folder)
+        # 检查并重新创建输出文件夹
+        if os.path.exists(full_output_folder):
+            import shutil
+
+            shutil.rmtree(full_output_folder)
+        os.makedirs(full_output_folder, exist_ok=True)
 
         results = list()
         for batch_number, image in enumerate(images):
@@ -231,7 +231,7 @@ class SaveImageAZ:
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
 
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-            base_file_name = f"{filename_with_batch_num}_{counter:05}_"
+            base_file_name = f"{filename_with_batch_num}_{counter:05}"
             file = f"{base_file_name}.png"
             img.save(
                 os.path.join(full_output_folder, file),
