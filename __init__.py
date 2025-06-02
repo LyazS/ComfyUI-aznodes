@@ -217,7 +217,7 @@ class SaveImageAZ:
                     images[0].shape[0],
                 )
             )
-            print(full_output_folder)
+        print(f"Will save to {full_output_folder}")
         # 检查并重新创建输出文件夹
         if os.path.exists(full_output_folder):
             import shutil
@@ -244,6 +244,7 @@ class SaveImageAZ:
             counter += 1
 
         return (file,)
+
 
 
 NODE_CLASS_MAPPINGS = {
