@@ -2,7 +2,7 @@ import numpy as np
 import os
 import folder_paths
 from PIL import Image
-
+import torch
 
 class CrossFadeImageSequence:
 
@@ -245,9 +245,33 @@ class SaveImageAZ:
 
         return (file,)
 
+class ImageGrayscaleAZ:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"original": ("IMAGE",)}}
+    
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("grayscale",)
+    FUNCTION = "make_grayscale"
+    CATEGORY = "AZNodes/image"
 
+    def make_grayscale(self, original):
+        # 原始图像形状应该是 [batch_size, height, width, 3] (RGB)
+        
+        # RGB到灰度的转换权重 (BT.709 标准)
+        # Y = 0.2126*R + 0.7152*G + 0.0722*B
+        weights = torch.tensor([0.2126, 0.7152, 0.0722], device=original.device)
+        
+        # 计算灰度值 - 在最后一个维度(RGB通道)上应用权重
+        grayscale = torch.sum(original * weights, dim=-1, keepdim=True)
+        
+        # 复制到3个通道以保持RGB格式
+        grayscale = grayscale.repeat(1, 1, 1, 3)
+        
+        return (grayscale,)
 
 NODE_CLASS_MAPPINGS = {
     "CrossFadeImageSequence": CrossFadeImageSequence,
     "SaveImageAZ": SaveImageAZ,
+    "ImageGrayscaleAZ": ImageGrayscaleAZ,
 }
